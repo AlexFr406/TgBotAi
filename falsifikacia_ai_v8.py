@@ -2,9 +2,10 @@ import telebot
 from telebot import types
 import time
 import httpx
+import os
 
-BOT_TOKEN = '8626664364:AAEHJoEtLTuT71cC1ObF1784H_36h39rHXU'
-OPENROUTER_KEY = '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'
+BOT_TOKEN = os.getenv('BOT_TOKEN')
+OPENROUTER_KEY = os.getenv('OPENROUTER_KEY')
 
 # ===== НАСТРОЙКИ ИИ =====
 
@@ -300,7 +301,6 @@ def gost_diamonds(message):
 
 
 # ===== НАЙТИ ЭКСПЕРТА (с ИИ) =====
-# ИИ помогает найти эксперта в конкретном городе пользователя
 
 @bot.message_handler(func=lambda m: m.text == "👨‍💼 Найти эксперта")
 def find_expert(message):
@@ -320,7 +320,6 @@ def process_expert_search(message):
     user_id = message.chat.id
     city = message.text
     del user_expert_search[user_id]
-
     system = (
         "Ты — эксперт по ювелирному рынку. "
         "Отвечай максимально коротко: 3-4 пункта с эмодзи. Только суть. На русском языке."
@@ -333,7 +332,6 @@ def process_expert_search(message):
 
 
 # ===== ПРОВЕРИТЬ МАГАЗИН (с ИИ) =====
-# ИИ анализирует конкретный магазин по названию
 
 @bot.message_handler(func=lambda m: m.text == "🏪 Проверить магазин")
 def check_shop(message):
@@ -353,7 +351,6 @@ def process_shop_check(message):
     user_id = message.chat.id
     shop_name = message.text
     del user_shop_check[user_id]
-
     system = (
         "Ты — эксперт по ювелирному рынку России. "
         "Знаешь крупные ювелирные сети, их репутацию и особенности. "
@@ -427,7 +424,6 @@ def finish_checklist(user_id):
     no_critical = state["no_critical"]
     no_details = state["no_details"]
     total = len(CHECKLIST)
-
     if no_critical:
         verdict = "🔴 *НЕ ПОКУПАЙТЕ это украшение!*\n\nВы ответили «Нет» на один из критически важных вопросов."
         advice = "💡 Попросите продавца объяснить несоответствия. Если не может — уходите."
@@ -440,21 +436,18 @@ def finish_checklist(user_id):
     else:
         verdict = "🔴 *НЕ ПОКУПАЙТЕ это украшение!*\n\nСлишком много подозрительных признаков."
         advice = "💡 Обратитесь в другой магазин или к сертифицированному эксперту."
-
     bot.send_message(
         user_id,
         f"📋 *Проверка завершена!*\n\nВаш результат: *{yes_count} из {total}* ✅\n\n{verdict}\n\n{advice}",
         parse_mode="Markdown"
     )
     del user_checklist_state[user_id]
-
-    # ИИ даёт персональный совет если были проблемные пункты
     if yes_count < total:
         failed_items = "\n".join(no_details) if no_details else "несколько пунктов не прошли проверку"
         prompt = (
             f"Покупатель проверял украшение по чеклисту. Результат: {yes_count} из {total} пунктов. "
             f"Проблемные пункты: {failed_items}. "
-            f"Дай короткий практический совет — что делать дальше и на что особо обратить внимание."
+            f"Дай короткий практический совет — что делать дальше."
         )
         send_with_thinking(bot, user_id, prompt, reply_markup=main_menu())
     else:
@@ -529,7 +522,6 @@ def finish_quiz(user_id):
     score = state["score"]
     mistakes = state["mistakes"]
     total = len(QUIZ)
-
     if score == total:
         grade = "🏆 Эксперт-геммолог! Вы профессионал!"
     elif score >= 6:
@@ -538,21 +530,18 @@ def finish_quiz(user_id):
         grade = "🥉 Неплохо! Но есть что изучить."
     else:
         grade = "📚 Рекомендуем изучить разделы бота — там много полезного!"
-
     bot.send_message(
         user_id,
         f"🎮 *Тест завершён!*\n\nВаш результат: *{score} из {total}*\n\n{grade}",
         parse_mode="Markdown"
     )
     del user_quiz_state[user_id]
-
-    # ИИ разбирает ошибки если результат плохой
     if score < 6 and mistakes:
         mistakes_text = "\n".join(mistakes)
         prompt = (
-            f"Пользователь прошёл тест на знание ювелирных украшений. Результат: {score} из {total}. "
-            f"Ошибся в следующих вопросах:\n{mistakes_text}\n\n"
-            f"Объясни коротко — какие знания нужно подтянуть и почему именно эти вопросы вызывают затруднения у покупателей."
+            f"Пользователь прошёл тест. Результат: {score} из {total}. "
+            f"Ошибся в вопросах:\n{mistakes_text}\n\n"
+            f"Коротко объясни что нужно подтянуть."
         )
         send_with_thinking(bot, user_id, prompt, reply_markup=main_menu())
     else:
