@@ -3,8 +3,8 @@ from telebot import types
 import time
 import httpx
 
-BOT_TOKEN = '8626664364:AAHL0hNKf_LEzpBfHp2eCpxWb_9GiSsPKkw'
-OPENROUTER_KEY = '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'
+BOT_TOKEN = '8626664364:AAEHJoEtLTuT71cC1ObF1784H_36h39rHXU'
+OPENROUTER_KEY = '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'
 
 # ===== НАСТРОЙКИ ИИ =====
 
